@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# chkconfig: 345 99 99
+# description: ADSC Python Control
+#
+### BEGIN INIT INFO
+# Provides:          logwatcherredis
+# Required-Start:    epics
+# Required-Stop:
+# Default-Start:     3 5
+# Default-Stop:
+# Description:       areaDetector Log file watcher and redis publisher
+### END INIT INFO
+
+# Source function library.
+#. /etc/rc.d/init.d/functions
+. /etc/rc.status
+
+if [ -f /etc/example_daemon ]; then
+        . /etc/example_daemon
+fi
+
+PATH=$PATH:/usr/local/python/bin/
+
+prog=LogWatcherRedis
+pidfile=${PIDFILE-/tmp/$prog.pid}
+RETVAL=0
+
+DAEMON=/beamline/apps/publishLogFile/LogWatcherRedis.py
+#VIRTENV=/beamline/apps/snapshot
+#OPTIONS="--working-directory=$VIRTENV --uid mudien --stdout /tmp/$prog.log"
+OPTIONS="--uid det --stdout /tmp/$prog.log"
+# activate virtual env
+#. $VIRTENV/bin/activate
+
+
+start() {
+    echo -n $"Starting $prog: "
+    startproc -v -p ${pidfile} $DAEMON --daemon --pidfile=${pidfile} --title=$prog $OPTIONS
+    sleep 1
+    checkproc -p ${pidfile} $prog
+    rc_status -v
+#	rc_status -v
+	echo $?
+#	RETVAL=$?
+	echo
+}
+
+
+stop() {
+	echo -n $"Stopping $prog: "
+	killproc -p ${pidfile} $prog
+	rc_status -v
+	echo
+}
+
+_status()
+{
+	echo -n $"Status $prog: "
+        checkproc -p ${pidfile} $prog
+	rc_status -v
+#	RETVAL=$?
+}
+
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+    _status
+	;;
+  restart)
+	stop
+	start
+	;;
+  *)
+	echo $"Usage: $prog {start|stop|restart|status}"
+	RETVAL=2
+esac
+
+exit $RETVAL
+

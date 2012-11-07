@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# chkconfig: 345 99 99
+# description: logwatcher Python Control
+#
+### BEGIN INIT INFO
+# Provides:          logwatcher
+# Required-Start:    
+# Required-Stop:
+# Default-Start:     3 5
+# Default-Stop:
+# Description:       areaDetector logfile to redis converter
+### END INIT INFOi
+
+prog=logwatcher
+
+start() {
+    echo -n $"Starting $prog: "
+    supervisorctl start ${prog}
+}
+
+
+stop() {
+	echo -n $"Stopping $prog: "
+        supervisorctl stop ${prog}
+}
+
+_status()
+{
+	echo -n $"Status $prog: "
+        supervisorctl status ${prog}
+}
+
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+    _status
+	;;
+  restart)
+	stop
+	start
+	;;
+  *)
+	echo $"Usage: $prog {start|stop|restart|status}"
+	RETVAL=2
+esac
+
+exit $RETVAL
+
