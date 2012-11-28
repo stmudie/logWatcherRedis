@@ -67,7 +67,10 @@ class LogWatcherRedis():
         if (logLocation != self.logLocation):
             self.kill()
             newUserEPN = logLocation.split('/')[5]
-            oldUserEPN = self.logLocation.split('/')[5]
+            if len(self.logLocation) > 0: 
+                oldUserEPN = self.logLocation.split('/')[5]
+            else:
+                oldUserEPN = ''
             
             if (newUserEPN != oldUserEPN):
                 self.redis.flushall()
