@@ -37,16 +37,16 @@ class LogWatcherRedis():
         profile = profile[0:20]+profile[20:40:2]+profile[40:60:5]+profile[60::15]
         filename = self.filenamePV.get(as_string=1)
         data = zip(qVector,profile)
-	message = pickle.dumps({'filename':filename,'profile':data})
+        message = pickle.dumps({'filename':filename,'profile':data})
         print 'publish'
-	self.redis.publish('logline:pub:raw_dat', message)
-	self.redis.set('logline:raw_dat', message)
+        self.redis.publish('logline:pub:raw_dat', message)
+        self.redis.set('logline:raw_dat', message)
   
     def onNewProfile(self, pvname, value, **kwargs):
         thread=Thread(target=self.publishProfileThread, args=(value,))
         thread.daemon = True
-	thread.start()
-	
+        thread.start()
+
     def onFileNameChange(self, pvname, value, char_value, **kwargs):
         """
         Epics Callback Method
@@ -66,6 +66,13 @@ class LogWatcherRedis():
         """
         if (logLocation != self.logLocation):
             self.kill()
+            newUserEPN = logLocation.split('/')[5]
+            oldUserEPN = self.logLocation.split('/')[5]
+            
+            if (newUserEPN != oldUserEPN):
+                self.redis.flushall()
+                self.redis.sadd('logline:channels','logline:pub:avg_buf','logline:pub:avg_smp','logline:pub:avg_sub','logline:pub:raw_dat')	
+            
             self.logLocation = logLocation
             self.redis.set('logline:path', self.logLocation)
             self.watch()
@@ -86,10 +93,10 @@ class LogWatcherRedis():
                 datfile = DatFile(datfilename)
                 q = datfile.getq()
                 p = datfile.getIntensities()
-		qVector = q[0:20]+q[20:40:2]+q[40:60:5]+q[60::15]
+                qVector = q[0:20]+q[20:40:2]+q[40:60:5]+q[60::15]
                 profile = p[0:20]+p[20:40:2]+p[40:60:5]+p[60::15]
                 data = zip(qVector,profile)
-	        message = pickle.dumps({'filename':fileName,'profile':data})
+                message = pickle.dumps({'filename':fileName,'profile':data})
                 self.redis.lpush('logline:autowater','logline:autowater:profile:%s' % (num,))
                 self.redis.set('logline:autowater:profile:%s' % (num,),message)
                 self.redis.publish('logline:pub:autowater',message)
@@ -113,8 +120,8 @@ class LogWatcherRedis():
         """
         self.thread = Thread(target=self.watchThread,)
         self.thread.daemon = True
-	self.thread.start()
-    
+        self.thread.start()
+
     def fileWatch(self):
         """
         Here we watch constantly for a new line to be created
